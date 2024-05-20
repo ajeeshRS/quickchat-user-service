@@ -1,10 +1,10 @@
 import express from "express"
-import { signUp } from "../controllers/userController"
+import { createProfile } from "../controllers/userController"
 
 const router = express.Router()
 
 
-router.get("/signup", signUp)
+router.post("/signup", createProfile)
 
 
 export default router
