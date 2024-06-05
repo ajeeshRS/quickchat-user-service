@@ -9,7 +9,7 @@ const userProfileSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true 
+    sparse: true
   },
   email: {
     type: String,
@@ -23,10 +23,6 @@ const userProfileSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'offline'
-  },
-  lastSeen: {
-    type: Date,
-    default: null
   },
   contacts: [
     {
@@ -59,7 +55,7 @@ const userProfileSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.Mixed,
       default: {}
     }
-  ]
+  ],
 }, { timestamps: true });
 
 export const userProfile = mongoose.model("userProfile", userProfileSchema)
