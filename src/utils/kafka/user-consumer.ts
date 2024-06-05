@@ -13,12 +13,10 @@ export const consumeMessage = async (topic: string, callback: (message: any) => 
             eachMessage: async ({ topic, message }) => {
                 try {
                     const messageValue = message.value?.toString()
-
                     if (!messageValue) {
                         console.error("Message value undefined or empty")
                         return;
                     }
-                    
                     const parsedMessage = JSON.parse(messageValue)
                     callback(parsedMessage)
 
@@ -29,7 +27,5 @@ export const consumeMessage = async (topic: string, callback: (message: any) => 
         })
     } catch (err) {
         console.log("Error consuming message: ", err)
-    } finally {
-        consumer.disconnect()
     }
 }
