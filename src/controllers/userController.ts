@@ -1,27 +1,52 @@
 import { Request, Response } from "express";
 import { userProfile } from "../models/userModel";
 
-// export const createProfile = async (req: Request, res: Response) => {
-//     try {
-       
-        // const { userName, email, googleId } = req.body
+export const searchUser = async (req: Request, res: Response) => {
+        try {
+                const queryTerm = req.params.query
+                const result = await userProfile.aggregate([
+                        {
+                                $match: {
+                                        $or: [
+                                                { userName: { $regex: queryTerm, $options: 'i' } },
+                                                { email: { $regex: queryTerm, $options: 'i' } },
+                                        ]
+                                }
+                        },
+                        {
+                                $lookup: {
+                                        from: 'userconnections',
+                                        localField: 'email',
+                                        foreignField: 'email',
+                                        as: 'connections',
+                                }
+                        },
+                        {
+                                $unwind:"$connections"
+                        },
+                        {
+                                $replaceRoot:{
+                                        newRoot:{
+                                                $mergeObjects:['$connections','$$ROOT']
+                                        }
+                                }
 
-        // if (!userName || !email) {
-        //     return res.status(400).json("All fields are mandatory")
-        // }
-
-        // const profileData = {
-        //     username: userName,
-        //     email: email,
-        //     ...(googleId && { googleId })
-        // }
-
-        // await userProfile.create(profileData)
-
-        // return res.status(201).json("Profile created")
-
-//     } catch (err) {
-//         console.error("Error creating profile", err)
-//         return res.status(500).json("Unable to create profile")
-//     }
-// }
+                        },
+                        {
+                                $project: {
+                                        username: 1,
+                                        email: 1,
+                                        profilePicture: 1,
+                                        bio: 1,
+                                        socketId: '$connections.socketId',
+                                        _id:0
+                                }
+                        }
+                ])
+                console.log(result)
+                res.status(200).json(result)
+        } catch (err) {
+                console.error("some error in fetching data: ", err)
+                res.status(500).json('Internal server error')
+        }
+}
