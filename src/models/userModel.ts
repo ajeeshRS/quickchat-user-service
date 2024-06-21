@@ -27,7 +27,7 @@ const userProfileSchema = new mongoose.Schema({
   contacts: [
     {
       username: String,
-      email: String,
+      email: String
     }
   ],
   blockedUsers: [

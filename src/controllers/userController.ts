@@ -4,6 +4,8 @@ import { userProfile } from "../models/userModel";
 export const searchUser = async (req: Request, res: Response) => {
         try {
                 const queryTerm = req.params.query
+
+                // aggregation pipeline for getting result for searching a user
                 const result = await userProfile.aggregate([
                         {
                                 $match: {
@@ -64,6 +66,8 @@ export const updateStatus = async (req: Request, res: Response) => {
                         return res.status(403).json("Email and status are required ")
                 }
                 const user = await userProfile.findOne({ email: email })
+
+                // updates the user status
                 if (user) {
                         user.status = status
                         await user.save()
@@ -73,5 +77,36 @@ export const updateStatus = async (req: Request, res: Response) => {
         } catch (err) {
                 res.status(500).json("Internal server error")
                 console.error('Some error occured during updating status: ', err)
+        }
+}
+
+export const addContact = async (req: Request, res: Response) => {
+        try {
+                const { email, contactEmail, contactUsername } = req.body
+
+                if (!email || !contactEmail || !contactUsername) {
+                        return res.status(403).json("Credentials missing")
+                }
+
+                const user = await userProfile.findOne({ email })
+                if (!user) {
+                        return res.status(404).json("user profile not found")
+                }
+
+                const existingContact = user.contacts.some((contact) => 
+                        contact.username == contactUsername || contact.email == contactEmail
+                )
+
+                if (existingContact) {
+                        return res.status(409).json("contact already exist")
+                }
+
+                user.contacts.push({ email: contactEmail, username: contactUsername })
+                await user.save()
+                res.status(200).json("Added to contacts")
+
+        } catch (err) {
+                console.error("Error in adding to contacts: ", err)
+                res.status(500).json("Internal server error")
         }
 }
