@@ -41,8 +41,6 @@ export const searchUser = async (req: Request, res: Response) => {
                                         profilePicture: 1,
                                         bio: 1,
                                         status: 1,
-                                        blockedContacts: 1,
-                                        contacts: 1,
                                         socketId: '$connections.socketId',
                                         _id: 0
                                 }
@@ -93,7 +91,7 @@ export const addContact = async (req: Request, res: Response) => {
                         return res.status(404).json("user profile not found")
                 }
 
-                const existingContact = user.contacts.some((contact) => 
+                const existingContact = user.contacts.some((contact) =>
                         contact.username == contactUsername || contact.email == contactEmail
                 )
 
@@ -108,5 +106,53 @@ export const addContact = async (req: Request, res: Response) => {
         } catch (err) {
                 console.error("Error in adding to contacts: ", err)
                 res.status(500).json("Internal server error")
+        }
+}
+
+export const getContactDetails = async (req: Request, res: Response) => {
+        try {
+                const contactEmails: any = req.query.emails
+                const emails: string[] = contactEmails.split(',')
+                console.log(emails)
+
+                if (!emails) {
+                        return res.status(403).json("Emails not provided")
+                }
+                
+                const contactDetails = await userProfile.aggregate([
+                        {
+                                $match: { email: { $in: emails } }
+                        },
+                        {
+                                $lookup: {
+                                        from: 'userconnections',
+                                        localField: 'email',
+                                        foreignField: 'email',
+                                        as: 'details'
+                                }
+                        },
+                        {
+                                $unwind: {
+                                        path: '$details',
+                                        preserveNullAndEmptyArrays: true
+                                }
+                        },
+                        {
+                                $project: {
+                                        username: 1,
+                                        profilePicture: 1,
+                                        bio: 1,
+                                        status: 1,
+                                        socketId: '$details.socketId',
+                                        email: 1,
+                                        _id: 0
+                                }
+                        }
+                ])
+
+                res.status(200).json({ contactDetails })
+        } catch (err) {
+                console.error("Error in fetching contact details: ", err)
+                res.status(500).json("Error in fetching contact details")
         }
 }
