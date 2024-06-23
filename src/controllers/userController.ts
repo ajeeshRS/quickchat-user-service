@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { userProfile } from "../models/userModel";
+import { produceMessage } from "../utils/kafka/user-producer";
 
 export const searchUser = async (req: Request, res: Response) => {
         try {
@@ -91,6 +92,12 @@ export const addContact = async (req: Request, res: Response) => {
                         return res.status(404).json("user profile not found")
                 }
 
+                console.log(contactEmail)
+                const peerUser = await userProfile.findOne({ email: contactEmail })
+                if (!peerUser) {
+                        return res.status(404).json("Peer profile not found")
+                }
+
                 const existingContact = user.contacts.some((contact) =>
                         contact.username == contactUsername || contact.email == contactEmail
                 )
@@ -100,7 +107,18 @@ export const addContact = async (req: Request, res: Response) => {
                 }
 
                 user.contacts.push({ email: contactEmail, username: contactUsername })
+                const data = {
+                        userName: user.username,
+                        peerUserName: peerUser.username,
+                        id: user._id,
+                        peerId: peerUser._id
+                }
+                if (!data) {
+                        return res.status(403).json("Missing details")
+                }
+                await produceMessage('new-chat', data)
                 await user.save()
+
                 res.status(200).json("Added to contacts")
 
         } catch (err) {
@@ -118,7 +136,7 @@ export const getContactDetails = async (req: Request, res: Response) => {
                 if (!emails) {
                         return res.status(403).json("Emails not provided")
                 }
-                
+
                 const contactDetails = await userProfile.aggregate([
                         {
                                 $match: { email: { $in: emails } }
@@ -145,7 +163,7 @@ export const getContactDetails = async (req: Request, res: Response) => {
                                         status: 1,
                                         socketId: '$details.socketId',
                                         email: 1,
-                                        _id: 0
+                                        _id: 1
                                 }
                         }
                 ])
