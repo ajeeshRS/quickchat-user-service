@@ -218,3 +218,22 @@ export const deleteContact = async (req: Request, res: Response) => {
     res.status(500).json("Couldn't delete the contact");
   }
 };
+
+export const getUsersDetails = async (req: Request, res: Response) => {
+  try {
+    const { senderEmail, recipientEmail } = req.query;
+    // console.log(`sender:${senderEmail}  , recipient:${recipientEmail}`);
+
+    const result = await userProfile.find(
+      {
+        email: { $in: [senderEmail, recipientEmail] },
+      },
+      { email: 1, username: 1, _id: 1 }
+    );
+
+    // console.log(result);
+    res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+  }
+};
