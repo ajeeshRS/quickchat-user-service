@@ -6,6 +6,7 @@ import {
   searchUser,
   updateStatus,
   getUsersDetails,
+  addChatToProfile,
 } from "../controllers/userController";
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.post("/add-contact", addContact);
 router.get("/contacts-details", getContactDetails);
 router.delete("/delete-contact", deleteContact);
 router.get("/usersdetails", getUsersDetails);
+router.post("/add-chat", addChatToProfile);
 
 export default router;

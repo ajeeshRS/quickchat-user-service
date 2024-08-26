@@ -237,3 +237,19 @@ export const getUsersDetails = async (req: Request, res: Response) => {
     console.error(err);
   }
 };
+
+export const addChatToProfile = async (req: Request, res: Response) => {
+  try {
+    const { chatId, peerId, userId } = req.body;
+
+    const result = await userProfile.updateMany(
+      { _id: { $in: [userId, peerId] } },
+      { $addToSet: { chats: chatId } }
+    );
+    console.log(result);
+    res.status(200).json("Chat added to user profiles");
+  } catch (err) {
+    console.error("Error in adding chat to profile: ", err);
+    res.status(500).json("Internal server Error");
+  }
+};
